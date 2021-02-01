@@ -2,42 +2,30 @@
 import React, { useState } from 'react'
 import ReactDOM from 'react-dom'
 
-const Display = ({ counter }) => <div>{counter}</div>
-
-const Button = ({ handleClick, text }) => {
-  return (
-    <button onClick={handleClick}>
-      {text}
-    </button>
-  )
-}
-
 const App = () => {
-  //counterというstate変数を宣言しており、それを0にセット
-  //counterを更新したい場合はsetCounterを呼ぶことができる
-  const [ counter, setCounter ] = useState(0)
+  //左右を１つのオブジェクトに保存することで左右のstate(クリック数)を保存
+  const [clicks, setClicks] = useState({
+    left: 0, right: 0
+  })
 
-  //イベントハンドラーはJSX内で定義するべきではない
-  const increaseByOne = () => setCounter(counter + 1)
-  const decreaseByOne = () => setCounter(counter - 1)
-  const setToZero = () => setCounter(0)
+  //左クリック
+  //スプレッド構文を用いている
+  //leftだけを更新するのではなく、オブジェクトを丸ごと新しいものに置き換える必要がある
+  const handleLeftClick = () => {
+    setClicks({...clicks, left: clicks.left + 1})
+  }
 
-  //stateを読み出す時に直接counterを使うことができる
+  //右クリック
+  const handleRightClick = () => {
+    setClicks({...clicks, right: clicks.right + 1})
+  }
+
   return (
     <>
-    <Display counter={counter} />
-    <Button
-      handleClick={increaseByOne}
-      text='plus'
-    />
-    <Button
-      handleClick={setToZero}
-      text='zero'
-    />
-    <Button
-      handleClick={decreaseByOne}
-      text='minus'
-    />
+      {clicks.left}
+      <button onClick={handleLeftClick}>left</button>
+      <button onClick={handleRightClick}>right</button>
+      {clicks.right}
     </>
   )
 }
