@@ -28,31 +28,18 @@ const App = () => {
   */
   useEffect(hook, [])
 
-  const toggleImportanceOf = id => {
-    const url = `http://localhost:3001/notes/${id}`
-    const note = notes.find(n => n.id === id)//変更するノートを検索し、そのノートへの参照をnote変数に格納する
-    const changedNote = { ...note, important: !note.important }//...noteでnoteオブジェクト全体をコピーして、importantだけ変えてる
-
-    //サーバーでメモがchangedNoteで更新されたら、stateのnotesを丸ごと更新する
-    axios.put(url, changedNote).then(response => {
-      setNotes(notes.map(note => note.id !== id ? note : response.data))
-    })
-  }
-
-  const addNote = event => {
+  const addNote = (event) => {
     event.preventDefault()//inputのsubmitクリックで発生する動作(ページリロード)を防止する
     const noteObject = {
       content: newNote,//newNote stateから値を受け取る
       date: new Date().toISOString(),//
       inportant: Math.random() < 0.5,//Math.random()は0~1間の値を返す 50%の確率で重要なメモと判断させる
+      id: notes.length + 1,//IDはnoteの総数に基づいて生成(noteが削除されない前提)
     }
 
-    axios
-      .post('http://localhost:3001/notes', noteObject)
-      .then(response => {
-        setNotes(notes.concat(response.data))
-        setNewNote('')
-      })
+    //concatメソッドによりnoteObjectが追加された新しいnotes配列を作成
+    setNotes(notes.concat(noteObject))
+    setNewNote('')
   }
 
   //フォーム内容の変更をstateと同期させる
@@ -71,7 +58,7 @@ const App = () => {
     <div>
       <h1>Notes</h1>
       <div>
-        {/* showAllのtrue:falseを切り替える */}
+        //showAllのtrue:falseを切り替える
         <button onClick={() => setShowAll(!showAll)}>
           show {showAll ? 'important' : 'all'}
         </button>
@@ -83,11 +70,7 @@ const App = () => {
           持っている必要がある。
         */}
         {notesToShow.map(note =>
-          <Note
-            key={note.id}
-            note={note}
-            toggleImportance={() => toggleImportanceOf(note.id)}
-          />
+          <Note key={note.id} note={note} />
         )}
       </ul>
       <form onSubmit={addNote}>
