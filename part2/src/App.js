@@ -1,10 +1,32 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import axios from 'axios'
 import Note from './components/Note'
 
-const App = (props) => {
-  const [notes, setNotes] = useState(props.notes)//全てのnoteを保持するstate
+const App = () => {
+  const [notes, setNotes] = useState([])//全てのnoteを保持するstate
   const [newNote, setNewNote] = useState('')//フォーム入力内容を保持するstate
   const [showAll, setShowAll] = useState(true)
+
+  const hook = () => {
+    console.log('effect')
+    /*
+    AxiosのメソッドgetはPromiseを返します。
+    PromiseとはJavaScriptにおいて、非同期処理の操作が完了したときに結果を返すものです。
+    */
+    axios
+      .get('http://localhost:3001/notes')
+      .then(response => {
+        console.log('promise fulfilled')
+        setNotes(response.data)//state更新すると、コンポーネントは再度レンダリングされる
+      })
+  }
+
+  /*
+  effect Hooksはサーバーからデータを取得するための正しい方法
+  effect Hooksはデフォルトではページレンダリング直後に実行される
+  useEffect関数の2番目のパラメーターは、エフェクトが実行される頻度を指定するために使用される
+  */
+  useEffect(hook, [])
 
   const addNote = (event) => {
     event.preventDefault()//inputのsubmitクリックで発生する動作(ページリロード)を防止する
