@@ -1,45 +1,59 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import Note from './components/Note'
+import noteService from './services/notes'
 
 const App = () => {
   const [notes, setNotes] = useState([])//全てのnoteを保持するstate
   const [newNote, setNewNote] = useState('')//フォーム入力内容を保持するstate
   const [showAll, setShowAll] = useState(true)
 
-  const hook = () => {
-    console.log('effect')
-    /*
-    AxiosのメソッドgetはPromiseを返します。
-    PromiseとはJavaScriptにおいて、非同期処理の操作が完了したときに結果を返すものです。
-    */
-    axios
-      .get('http://localhost:3001/notes')
-      .then(response => {
-        console.log('promise fulfilled')
-        setNotes(response.data)//state更新すると、コンポーネントは再度レンダリングされる
-      })
-  }
-
   /*
   effect Hooksはサーバーからデータを取得するための正しい方法
   effect Hooksはデフォルトではページレンダリング直後に実行される
   useEffect関数の2番目のパラメーターは、エフェクトが実行される頻度を指定するために使用される
   */
-  useEffect(hook, [])
+  useEffect(() => {
+    noteService
+      .getAll()
+        .then(initialNotes => {
+        setNotes(initialNotes)//state更新すると、コンポーネントは再度レンダリングされる
+      })
+  }, [])
 
-  const addNote = (event) => {
+  const toggleImportanceOf = id => {
+    const note = notes.find(n => n.id === id)//変更するノートを検索し、そのノートへの参照をnote変数に格納する
+    const changedNote = { ...note, important: !note.important }//...noteでnoteオブジェクト全体をコピーして、importantだけ変えてる
+
+    noteService
+      .update(id, changedNote)
+        .then(returnedNote => {
+        //サーバーでメモがchangedNoteで更新されたら、stateのnotesを丸ごと更新する
+        setNotes(notes.map(note => note.id !== id ? note : returnedNote))
+      })
+      //リクエストに失敗した時の処理
+      .catch(error => {
+        alert(
+          `the note '${note.content}' was already deleted from server`
+        )
+        setNotes(notes.filter(n => n.id !== id))
+      })
+  }
+
+  const addNote = event => {
     event.preventDefault()//inputのsubmitクリックで発生する動作(ページリロード)を防止する
     const noteObject = {
       content: newNote,//newNote stateから値を受け取る
       date: new Date().toISOString(),//
       inportant: Math.random() < 0.5,//Math.random()は0~1間の値を返す 50%の確率で重要なメモと判断させる
-      id: notes.length + 1,//IDはnoteの総数に基づいて生成(noteが削除されない前提)
     }
 
-    //concatメソッドによりnoteObjectが追加された新しいnotes配列を作成
-    setNotes(notes.concat(noteObject))
-    setNewNote('')
+    noteService
+      .create(noteObject)
+        .then(returnedNote => {
+        setNotes(notes.concat(returnedNote))
+        setNewNote('')
+      })
   }
 
   //フォーム内容の変更をstateと同期させる
@@ -58,7 +72,7 @@ const App = () => {
     <div>
       <h1>Notes</h1>
       <div>
-        //showAllのtrue:falseを切り替える
+        {/* showAllのtrue:falseを切り替える */}
         <button onClick={() => setShowAll(!showAll)}>
           show {showAll ? 'important' : 'all'}
         </button>
@@ -70,7 +84,11 @@ const App = () => {
           持っている必要がある。
         */}
         {notesToShow.map(note =>
-          <Note key={note.id} note={note} />
+          <Note
+            key={note.id}
+            note={note}
+            toggleImportance={() => toggleImportanceOf(note.id)}
+          />
         )}
       </ul>
       <form onSubmit={addNote}>
