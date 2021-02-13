@@ -3,10 +3,28 @@ import axios from 'axios'
 import Note from './components/Note'
 import noteService from './services/notes'
 
+const Footer = () => {
+  //CSSルールはオブジェクトとして書くため、Javascript構文に従って下記のように記述
+  //ReactではCSSを独自のファイルに分けて書くのは古いやり方
+  const footerStyle = {
+    color: 'green',
+    fontStyle: 'italic',
+    fontSize: 16
+  }
+
+  return (
+    <div style={footerStyle}>
+      <br />
+      <em>Note app, Department of Computer Science, University of Helsinki 2020</em>
+    </div>
+  )
+}
+
 const App = () => {
   const [notes, setNotes] = useState([])//全てのnoteを保持するstate
   const [newNote, setNewNote] = useState('')//フォーム入力内容を保持するstate
   const [showAll, setShowAll] = useState(true)
+  const [errorMessage, setErrorMessage] = useState('some error happened...')
 
   /*
   effect Hooksはサーバーからデータを取得するための正しい方法
@@ -33,9 +51,12 @@ const App = () => {
       })
       //リクエストに失敗した時の処理
       .catch(error => {
-        alert(
-          `the note '${note.content}' was already deleted from server`
+        setErrorMessage(
+          `Note '${note.content}' was already removed from server`
         )
+        setTimeout(() => {
+          setErrorMessage(null)
+        }, 5000)
         setNotes(notes.filter(n => n.id !== id))
       })
   }
@@ -68,9 +89,23 @@ const App = () => {
     : notes.filter(note => note.important === true)
     //( filter()は与えられた関数によって実装されたテストに合格した全ての配列からなる新しい配列を生成 )
 
+  //エラーメッセージを表示させるコンポーネント
+  const Notification = ({ message }) => {
+    if (message === null) {
+      return null
+    }
+
+    return (
+      <div className="error">
+        {message}
+      </div>
+    )
+  }
+
   return (
     <div>
       <h1>Notes</h1>
+      <Notification message={errorMessage} />
       <div>
         {/* showAllのtrue:falseを切り替える */}
         <button onClick={() => setShowAll(!showAll)}>
@@ -98,6 +133,7 @@ const App = () => {
         />
         <button type="submit">save</button>
       </form>
+      <Footer />
     </div>
   )
 }
