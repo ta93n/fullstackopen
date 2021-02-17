@@ -55,6 +55,14 @@ app.get('/api/notes/:id', (request, response) => {
   }
 })
 
+app.delete('/api/notes/:id', (request, response) => {
+  const id = Number(request.params.id)
+  notes = notes.filter(note => note.id !== id)
+
+  //204ステータスは成功レスポンス(送信するコンテンツは無い)
+  response.status(204).end()
+})
+
 //listen()でポート番号を指定すれば、「localhost:3001」にブラウザからアクセスできる
 const PORT = 3001
 app.listen(PORT, () => {
